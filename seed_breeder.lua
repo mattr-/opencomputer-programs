@@ -6,7 +6,7 @@ robot = require("robot")
 terminal = require("term")
 sides = require("sides")
 inv = component.inventory_controller
- 
+
 function getWaypoints()
   local range = component.navigation.getRange()
   return component.navigation.findWaypoints(range)
@@ -36,8 +36,9 @@ function move(method, number)
   end
 end
 
-function prepCropSticks()
-  if robot.count(1) > 1 then
+function prepCropSticks(number)
+  number = number * 2
+  if robot.count(1) > number then
     robot.select(1)
   else
     robot.select(2)
@@ -45,18 +46,15 @@ function prepCropSticks()
 end
 
 function plantNormalSticks()
-  prepCropSticks() 
+  prepCropSticks(1)
   inv.equip()
   robot.useDown(sides.bottom)
   inv.equip()
 end
 
 function plantCrossSticks()
-  prepCropSticks()
-  inv.equip()
   robot.useDown(sides.bottom)
   robot.useDown(sides.bottom)
-  inv.equip()
 end
 
 function clear(count, direction)
@@ -108,15 +106,15 @@ function moveToWaypoint(waypoint)
   -- if the waypoint is below us, y will be negative
   -- if the waypoint is above us, y will be negative
   -- if the waypoint is to the right of us, z will be negative
-  -- if the waypoint is to the left of us, z will be positive 
+  -- if the waypoint is to the left of us, z will be positive
   -- if the waypoint is behind us, x will be positive
   -- if the waypoint is in front of us, x will be negative
-  
+
   -- we're going to assume that there's nothing above us to keep us from
   -- moving around freely
   if robot.up() == false then
     print("Cannot move up to move around freely. I'm stuck!")
-    os.exit()    
+    os.exit()
   end
 
   -- if x is positive, move backwards
@@ -196,10 +194,13 @@ function layDownCrossSticks(number, direction)
     direction()
   end
 
+  prepCropSticks(number)
+  inv.equip()
   for i = 1, number do
     robot.forward()
     plantCrossSticks()
   end
+  inv.equip()
 end
 
 function defaultInventory()
@@ -238,7 +239,6 @@ function main()
   terminal.clear()
 
   print "Starting up..."
-  print "Looking for the necessary waypoints"
 
   if not checkWaypoints() then
     print "Unable to find waypoints. Cannot continue."
@@ -247,15 +247,29 @@ function main()
     print "Waypoints found. Starting route."
   end
 
+  -- Double check that our seed has been analyzed
+  items = inv.getStackInInternalSlot(3)
+  if not items.hasTag then
+    print "Analyzing seed before planting"
+    seedInAnalyzer = true
+    ensureFacing(sides.west)
+    moveToWaypointByName("seed_analyzer")
+    robot.select(3)
+    robot.dropDown(items["size"])
+    robot.select(1)
+  else
+    seedInAnalyzer = false
+  end
+
   print "Clearing existing inventory."
-  
+
   reset()
 
 
   print "Gathering supplies."
   -- Move to the first way point position and wait
   moveToStartPosition()
-  
+
   -- The start position is the first block that we want to plant on
   -- Move back two blocks and down two one block so we can gather crop sticks,
   move(robot.back, 2)
@@ -328,6 +342,15 @@ function main()
   layDownCrossSticks(2, robot.turnRight)
   layDownCrossSticks(8, robot.turnRight)
 
+
+  if seedInAnalyzer then
+    print "Retrieving seed from analyzer"
+    robot.select(3)
+    ensureFacing(sides.west)
+    moveToWaypointByName("seed_analyzer")
+    robot.suckDown()
+    robot.select(1)
+  end
   ---- move back to start and plant the seed
   ensureFacing(sides.west)
   moveToStartPosition()
@@ -345,6 +368,7 @@ function main()
   print "Waiting 90 seconds for plants to grow"
   os.sleep(90)
 
+  robot.select(1)
   robot.forward()
   robot.swingDown()
 
