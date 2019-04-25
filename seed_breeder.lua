@@ -7,6 +7,10 @@ terminal = require("term")
 sides = require("sides")
 inv = component.inventory_controller
 
+local state = {
+    seed = nil,
+}
+
 function getWaypoints()
   local range = component.navigation.getRange()
   return component.navigation.findWaypoints(range)
@@ -166,6 +170,10 @@ function clearExtraInventory()
   robot.select(previousSlot)
 end
 
+function pullItemFromInventory(amount)
+
+end
+
 function dumpInventoryToTrashCan()
   -- save our current position and current facing
   plantX, plantY, plantZ = component.navigation.getPosition()
@@ -229,9 +237,42 @@ function checkWaypoints()
 end
 
 function reset()
+  state.seed = inv.getStackInInternalSlot(3)
   robot.select(1)
+  -- move to the trashcan waypoint
   ensureFacing(sides.west)
-  dumpInventoryToTrashCan()
+  moveToWaypointByName("trash_can")
+
+  -- dump inventory slots 4 through 16
+  clearExtraInventory()
+end
+
+function waitForSeed()
+  print "Waiting for seed to plant"
+  if not state.seed then
+    moveToWaypointByName("seed_start")
+    -- The start position is the first block that we want to plant on
+    -- Move back three blocks and down two one block so we can gather crop sticks,
+    move(robot.back, 3)
+    move(robot.down, 1)
+    robot.select(3)
+    inventorySize = inv.getInventorySize(sides.bottom)
+
+    if inventorySize > 0 then
+      repeat
+        for i = 1, inventorySize do
+          itemSlot = inv.getStackInSlot(sides.bottom, i)
+          if itemSlot then
+            inv.suckFromSlot(sides.bottom, i, itemSlot.maxSize)
+          end
+        end
+        state.seed = inv.getStackInInternalSlot(3)
+      until state.seed
+    end
+
+  end
+  robot.select(1)
+  print "Have seed to plant. Continuing"
 end
 
 function main()
@@ -247,24 +288,24 @@ function main()
     print "Waypoints found. Starting route."
   end
 
+  print "Clearing existing inventory."
+
+  reset()
+
+  waitForSeed()
+
   -- Double check that our seed has been analyzed
-  items = inv.getStackInInternalSlot(3)
-  if not items.hasTag then
+  if state.seed and (not state.seed.hasTag) then
     print "Analyzing seed before planting"
     seedInAnalyzer = true
     ensureFacing(sides.west)
     moveToWaypointByName("seed_analyzer")
     robot.select(3)
-    robot.dropDown(items["size"])
+    robot.dropDown(state.seed.size)
+    os.sleep(10) -- wait 10 seconds for the seed to be analyzed
+    robot.suckDown()
     robot.select(1)
-  else
-    seedInAnalyzer = false
   end
-
-  print "Clearing existing inventory."
-
-  reset()
-
 
   print "Gathering supplies."
   -- Move to the first way point position and wait
@@ -303,7 +344,6 @@ function main()
     end
   end
 
-
   -- Reset our position back to the start
   move(robot.up, 1)
   move(robot.forward, 2)
@@ -321,16 +361,6 @@ function main()
 
   print "Setting up crop sticks."
 
-  -- We're in the start position. Start planting crop sticks
-  -- This is the pattern we're expecting to plant in:
-  -- XXX XXX
-  -- X X X X
-  -- X X X X
-  --   X X X
-  --   X X X
-  --   X X X
-  --   X X X
-  --   XXX X
 
   ---- Do the placing of crop sticks
   plantNormalSticks()
@@ -343,18 +373,11 @@ function main()
   layDownCrossSticks(8, robot.turnRight)
 
 
-  if seedInAnalyzer then
-    print "Retrieving seed from analyzer"
-    robot.select(3)
-    ensureFacing(sides.west)
-    moveToWaypointByName("seed_analyzer")
-    robot.suckDown()
-    robot.select(1)
-  end
   ---- move back to start and plant the seed
   ensureFacing(sides.west)
   moveToStartPosition()
   inv.equip() -- put our crop sticks back
+
   robot.select(3)
   inv.equip()
   print "Planting the seed."
@@ -376,4 +399,3 @@ function main()
   -- Dump slots three, four, and five
   -- Do the whole thing over again
 end
-
