@@ -2,7 +2,7 @@ local component = require("component")
 
 local navigation = {}
 
-local waypoints = {}
+local waypoints = nil
 
 local function getPoints()
   if waypoints then
