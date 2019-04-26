@@ -6,6 +6,7 @@ robot = require("robot")
 terminal = require("term")
 sides = require("sides")
 inv = component.inventory_controller
+navigation = require("navigation")
 
 local state = {
     seed = nil,
@@ -17,7 +18,7 @@ function getWaypoints()
 end
 
 function waypointCount(table)
-  return table["n"]
+  return navigation.count()
 end
 
 function find(table, label)
