@@ -1,20 +1,20 @@
 local component = require("component")
+local sides = require("sides")
 
 local navigation = {}
 
 local waypoints = nil
 
-local function getPoints()
-  if waypoints then
-    return waypoints
+function navigation.waypoints()
+  if not waypoints then
+    local range = component.navigation.getRange()
+    waypoints = component.navigation.findWaypoints(range)
   end
-  local range = component.navigation.getRange()
-  waypoints = component.navigation.findWaypoints(range)
   return waypoints
 end
 
 function navigation.count()
-  return getPoints()["n"]
+  return waypoints()["n"]
 end
 
 function navigation.find(name)
@@ -23,7 +23,7 @@ function navigation.find(name)
 
   local count = count()
   while index <= count do
-    waypoint = getPoints()[index]
+    waypoint = waypoints()[index]
     if waypoint.label == name then
       item = waypoint
       return item
@@ -47,7 +47,7 @@ function navigation.move(method, number)
 end
 
 function navigation.moveToPointByName(name)
-  local waypoint = find(getPoints(), waypointName)
+  local waypoint = find(waypoints(), waypointName)
   moveToWaypoint(waypoint)
 end
 
