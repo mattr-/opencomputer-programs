@@ -376,7 +376,6 @@ function main()
   ---- move back to start and plant the seed
   ensureFacing(sides.west)
   moveToStartPosition()
-  inv.equip() -- put our crop sticks back
 
   robot.select(3)
   inv.equip()
