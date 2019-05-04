@@ -387,8 +387,13 @@ function main()
   -- move back one more so the plant can grow
   robot.back()
 
-  print "Waiting 90 seconds for plants to grow"
-  os.sleep(90)
+  io.write "Waiting 2 minutes for plants to grow"
+  for i = 1, 12 do
+      os.sleep(10)
+      io.write "."
+  end
+  io.write("\n")
+
 
   robot.select(1)
   robot.forward()
