@@ -57,8 +57,7 @@ function plantNormalSticks()
 end
 
 function plantCrossSticks()
-  robot.useDown(sides.bottom)
-  robot.useDown(sides.bottom)
+  robot.useDown(sides.bottom, true)
 end
 
 function clear(count, direction)
