@@ -397,6 +397,8 @@ function main()
   robot.swingDown()
 
   print "I have the final seed!"
+  print "Sending it for analysis"
+  analyze_seed()
   -- Dump slots three, four, and five
   -- Do the whole thing over again
 end
