@@ -274,6 +274,16 @@ function waitForSeed()
   print "Have seed to plant. Continuing"
 end
 
+function analyze_seed()
+  ensureFacing(sides.west)
+  moveToWaypointByName("seed_analyzer")
+  robot.select(3)
+  robot.dropDown(state.seed.size)
+  os.sleep(10) -- wait 10 seconds for the seed to be analyzed
+  robot.suckDown()
+  robot.select(1)
+end
+
 function main()
 
   terminal.clear()
@@ -290,20 +300,12 @@ function main()
   print "Clearing existing inventory."
 
   reset()
-
   waitForSeed()
 
   -- Double check that our seed has been analyzed
   if state.seed and (not state.seed.hasTag) then
     print "Analyzing seed before planting"
-    seedInAnalyzer = true
-    ensureFacing(sides.west)
-    moveToWaypointByName("seed_analyzer")
-    robot.select(3)
-    robot.dropDown(state.seed.size)
-    os.sleep(10) -- wait 10 seconds for the seed to be analyzed
-    robot.suckDown()
-    robot.select(1)
+    analyze_seed()
   end
 
   print "Gathering supplies."
@@ -357,11 +359,8 @@ function main()
     moveToStartPosition()
   end
 
-
-  print "Setting up crop sticks."
-
-
   ---- Do the placing of crop sticks
+  print "Setting up crop sticks."
   plantNormalSticks()
   layDownCrossSticks(2)
   layDownCrossSticks(2, robot.turnRight)
@@ -370,7 +369,6 @@ function main()
   layDownCrossSticks(8, robot.turnLeft)
   layDownCrossSticks(2, robot.turnRight)
   layDownCrossSticks(8, robot.turnRight)
-
 
   ---- move back to start and plant the seed
   ensureFacing(sides.west)
