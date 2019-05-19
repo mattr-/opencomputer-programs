@@ -398,7 +398,20 @@ function main()
 
   print "I have the final seed!"
   print "Sending it for analysis"
+  state.seed = inv.getStackInInternalSlot(3)
   analyze_seed()
+
   -- Dump slots three, four, and five
+  moveToWaypointByName("seed_end")
+  -- The end position is the last block that we want to plant on
+  -- Move back two blocks and down two one block so we can put the seed and output away
+  move(robot.back, 2)
+  move(robot.down, 1)
+
+  -- Put the seed and output into the first open inventory slots
+  robot.dropDown(state.seed.size)
+  output = inv.getStackInInternalSlot(4)
+  robot.dropDown(output.size)
+
   -- Do the whole thing over again
 end
