@@ -409,9 +409,12 @@ function main()
   move(robot.down, 1)
 
   -- Put the seed and output into the first open inventory slots
+  robot.select(3)
   robot.dropDown(state.seed.size)
   output = inv.getStackInInternalSlot(4)
+  robot.select(4)
   robot.dropDown(output.size)
+  robot.select(1)
 
   -- Do the whole thing over again
 end
