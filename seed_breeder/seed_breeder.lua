@@ -257,18 +257,18 @@ function waitForSeed()
     robot.select(3)
     inventorySize = inv.getInventorySize(sides.bottom)
 
-    if inventorySize > 0 then
-      repeat
+    while not state.seed do
+      if inventorySize > 0 then
         for i = 1, inventorySize do
           itemSlot = inv.getStackInSlot(sides.bottom, i)
           if itemSlot then
             inv.suckFromSlot(sides.bottom, i, itemSlot.maxSize)
+            state.seed = inv.getStackInInternalSlot(3)
+            break
           end
         end
-        state.seed = inv.getStackInInternalSlot(3)
-      until state.seed
+      end
     end
-
   end
   robot.select(1)
   print "Have seed to plant. Continuing"
